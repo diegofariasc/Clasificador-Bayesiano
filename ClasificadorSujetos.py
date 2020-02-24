@@ -39,8 +39,10 @@ def clasificar():
     # K-Fold cross validation
     seed(semillaKFold)          # Estandarizar la semilla
     shuffle(varianzas_SA)       # Ordenar de forma aleatoria los datos del sujeto A
-    shuffle(varianzas_SB)       # Ordenar de forma aleatoria los datos del sujeto B
     
+    seed(semillaKFold)          # Estandarizar la semilla
+    shuffle(varianzas_SB)       # Ordenar de forma aleatoria los datos del sujeto B
+
     # Determinar si la cantidad de datos de entrenamiento permite el K-Fold validation
     # Si no, lanzar excepcion
     if cantDatosEntrenar % K != 0:
@@ -75,6 +77,7 @@ def clasificar():
                 P_SA *= norm.pdf(varianzas_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
                 P_SB *= norm.pdf(varianzas_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
 
+
             # Ver en que sujeto la probabilidad es mas alta
             if P_SA > P_SB:
                 conteo_SA +=1
@@ -100,18 +103,14 @@ def clasificar():
         inicioExp = inicioExp + n_experimentos                  # Avanzar porcion de datos considerada en el K-Fold
         
 
-    #print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
-    #print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
-    #print("Aciertos:                   ",[i[2] for i in K_resultados])
-    #print("Efectividades:              ",[str(100*i[2]/(n_experimentosA+n_experimentosB))+"%" for i in K_resultados])
+    print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
+    print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
+    print("Aciertos:                   ",[i[2] for i in K_resultados])
+    print("Efectividades:              ",[str(100*i[2]/(n_experimentosA+n_experimentosB))+"%" for i in K_resultados])
 
     aciertosPromedio=100*mean([i[2] for i in K_resultados])/(n_experimentosA+n_experimentosB)
-    #print("Aciertos promedio:          ",aciertosPromedio,"%")
-    return aciertosPromedio
+    print("Aciertos promedio:          ",aciertosPromedio,"%")
 
-
-efectividades = {}
-procesados=0
 
 # Parametros de los archivos
 sujetoA_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoA
@@ -122,10 +121,9 @@ canales             = [1,2,3]   # Canales a considerar
 Fs                  = 250       # Frecuencia de muestreo
 K                   = 3         # Numero K-fold
 semillaKFold        = 1         # Semilla para mezclar arreglo en K-Fold
-cantDatosEntrenar   = 15        # Cantidad de muestras a usar en el entrenamiento   
-claseUtilizada      = 'C1'      # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 47        # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 49        # Banda superior de frecuencias a filtrar
+cantDatosEntrenar   = 45        # Cantidad de muestras a usar en el entrenamiento   
+claseUtilizada      = 'C2'      # Clase a utilizar para distinguir entre sujetos
+bandaInferiorFiltro = 4        # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 10        # Banda superior de frecuencias a filtrar
 
-
-efectividades[clasificar()]:{"DatosEntrenar:":bandaInferiorFiltro,"bandaInf":bandaInferiorFiltro,"bandaSup":bandaSuperiorFiltro}
+clasificar()
