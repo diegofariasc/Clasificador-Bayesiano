@@ -1,32 +1,13 @@
 # Clasificador bayesiano con 9 sujetos, mismo movimiento
 # Programa de honores UDLAP
-from numpy        import var, mean, std, shape, zeros
+from numpy        import var, mean, std, shape, zeros, prod
 from scipy.signal import butter, lfilter, resample_poly
 from scipy.io     import loadmat
 from scipy.stats  import norm
 
-
-# Parametros de los archivos
-sujetoA_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoA
-sujetoB_nombreArchivo = "./Sujetos/S2"    # Nombre de la base de datos del sujetoB
-
-# Parametros de la clasificacion
-canales             = [1,2,3]   # Canales a considerar
-Fs                  = 250       # Frecuencia de muestreo
-cantDatosEntrenar   = 109       # Cantidad de muestras a usar en el entrenamiento   
-claseUtilizada      = 'C1'      # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 11        # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 13        # Banda superior de frecuencias a filtrar
-
-
-def main():
-
-    datosEntrena = entrenamiento()    # Entrenar el algoritmo
-    print(datosEntrena)
-
-
-def entrenamiento():
+def clasificar():
     
+    #Fase de entrenamiento------------------------------------------------------------------------------
     # Cargar la base de datos
     sujetoA = loadmat(sujetoA_nombreArchivo+".mat")[claseUtilizada]
     sujetoB = loadmat(sujetoB_nombreArchivo+".mat")[claseUtilizada]
@@ -51,18 +32,72 @@ def entrenamiento():
     # El proceso se repite para generar n_experimentos listas
     # Se repite nuevamente por cada canal en la lista dada 
     # Se concluye con una lista con shape (canales x varianzas)
-    varianzas_SA = [[ var([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
-    varianzas_SB = [[ var([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    varianzas_SA = [[ var([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentosA) ] for canal in canales]
+    varianzas_SB = [[ var([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentosB) ] for canal in canales]
 
     # Calcular por cada canal, la media y desviacion estandar
-    medias_SA     = [mean(varianza) for varianza in varianzas_SA]   
-    medias_SB     = [mean(varianza) for varianza in varianzas_SB]
-    desviacion_SA = [std(varianza)  for varianza in varianzas_SA]
-    desviacion_SB = [std(varianza)  for varianza in varianzas_SB]
+    medias_SA     = [mean(canal_varianza[0:n_experimentos]) for canal_varianza in varianzas_SA]   
+    medias_SB     = [mean(canal_varianza[0:n_experimentos]) for canal_varianza in varianzas_SB]
+    desviacion_SA = [std(canal_varianza[0:n_experimentos])  for canal_varianza in varianzas_SA]
+    desviacion_SB = [std(canal_varianza[0:n_experimentos])  for canal_varianza in varianzas_SB]
 
-    # Regresar diccionario con los datos de entrenamiento encontrados
-    return {"medias_SA":medias_SA,"medias_SB":medias_SB,
-            "desviacion_SA":desviacion_SA,"desviacion_SB":desviacion_SB}
+    # Fase de clasificacion------------------------------------------------------------------------------
+    # Contadores de clasificados como sujeto A y B y aciertos
+    conteo_SA = conteo_SB = aciertos = 0
 
-main()
+    # Clasificar experimentos que se sabia eran S1
+    # Por cada experimento
+    for exp in range(n_experimentosA):
+        P_SA = P_SB = 0.5
 
+        # Por cada canal
+        for canal in range(len(canales)):
+
+            # Multiplicar las probabilidades por P(x) donde x es la varianza del experimento n
+            P_SA *= norm.pdf(varianzas_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
+            P_SB *= norm.pdf(varianzas_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
+
+        # Ver en que sujeto la probabilidad es mas alta
+        if P_SA > P_SB:
+            conteo_SA +=1
+            aciertos+=1
+        else:
+            conteo_SB +=1
+
+    # Clasificar experimentos que se sabia eran S2
+    for exp in range(n_experimentosB):
+        P_SA = P_SB = 0.5
+        for canal in range(len(canales)):
+            P_SA *= norm.pdf(varianzas_SB[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
+            P_SB *= norm.pdf(varianzas_SB[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
+
+        # Ver en que sujeto la probabilidad es mas alta 
+        if P_SA > P_SB:
+            conteo_SA +=1 
+        else:
+            conteo_SB +=1
+            aciertos+=1
+
+    print("Clasificados como sujeto A:",conteo_SA)
+    print("Clasificados como sujeto B:",conteo_SB)
+    print("Aciertos:",aciertos, "Efectividad:",100*aciertos/(n_experimentosA+n_experimentosB),"%")
+
+
+
+
+efectividades = {}
+procesados=0
+
+# Parametros de los archivos
+sujetoA_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoA
+sujetoB_nombreArchivo = "./Sujetos/S2"    # Nombre de la base de datos del sujetoB
+
+# Parametros de la clasificacion
+canales             = [1,2,3]   # Canales a considerar
+Fs                  = 250       # Frecuencia de muestreo
+cantDatosEntrenar   = 15        # Cantidad de muestras a usar en el entrenamiento   
+claseUtilizada      = 'C1'      # Clase a utilizar para distinguir entre sujetos
+bandaInferiorFiltro = 47        # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 49        # Banda superior de frecuencias a filtrar
+
+clasificar()
