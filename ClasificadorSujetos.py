@@ -108,22 +108,23 @@ def clasificar():
     print("Aciertos:                   ",[i[2] for i in K_resultados])
     print("Efectividades:              ",[str(100*i[2]/(n_experimentosA+n_experimentosB))+"%" for i in K_resultados])
 
-    aciertosPromedio=100*mean([i[2] for i in K_resultados])/(n_experimentosA+n_experimentosB)
-    print("Aciertos promedio:          ",aciertosPromedio,"%")
+    efectividadesPromedio=100*mean([i[2] for i in K_resultados])/(n_experimentosA+n_experimentosB)
+    print("Efectividad promedio:       ",efectividadesPromedio,"%")
 
 
 # Parametros de los archivos
 sujetoA_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoA
-sujetoB_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoB
+sujetoB_nombreArchivo = "./Sujetos/S2"    # Nombre de la base de datos del sujetoB
+
 
 # Parametros de la clasificacion
 canales             = [1,2,3]   # Canales a considerar
 Fs                  = 250       # Frecuencia de muestreo
 K                   = 3         # Numero K-fold
 semillaKFold        = 1         # Semilla para mezclar arreglo en K-Fold
-cantDatosEntrenar   = 45        # Cantidad de muestras a usar en el entrenamiento   
+cantDatosEntrenar   = 45       # Cantidad de muestras a usar en el entrenamiento   
 claseUtilizada      = 'C2'      # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 4        # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 10        # Banda superior de frecuencias a filtrar
+bandaInferiorFiltro = 20        # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 35        # Banda superior de frecuencias a filtrar
 
 clasificar()
