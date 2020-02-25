@@ -109,26 +109,39 @@ def clasificar():
         K_resultados.append((conteo_SA,conteo_SB,aciertos))  # Guardar la efectividad K
         
 
-    print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
-    print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
-    print("Aciertos:                   ",[i[2] for i in K_resultados])
-    print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
+    #print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
+    #print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
+    #print("Aciertos:                   ",[i[2] for i in K_resultados])
+    #print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
 
     efectividadesPromedio=100*mean([i[2] for i in K_resultados])/(datosTest*2)
-    print("Efectividad promedio:       ",efectividadesPromedio,"%")
+    #print("Efectividad promedio:       ",efectividadesPromedio,"%")
+    return efectividadesPromedio
 
-# Parametros de los archivos
-sujetoA_nombreArchivo = "./Sujetos/S1"   # Nombre de la base de datos del sujetoA
-sujetoB_nombreArchivo = "./Sujetos/S1"    # Nombre de la base de datos del sujetoB
+for sujeto_A in range(1,9):
+    for sujeto_B in range(sujeto_A+1,10):
+        for clase in range(1,3):
 
-# Parametros de la clasificacion
-canales             = [1,2,3]               # Canales a considerar
-Fs                  = 250                   # Frecuencia de muestreo
-porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
-iteraciones         = 30                    # Iteraciones a realizar
-semillaKFold        = 1                     # Semilla para mezclar los datos 
-claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 25                    # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 35                    # Banda superior de frecuencias a filtrar
+            # Parametros de los archivos
+            sujetoA_nombreArchivo = "./Sujetos/S"+str(sujeto_A)    # Nombre de la base de datos del sujetoA
+            sujetoB_nombreArchivo = "./Sujetos/S"+str(sujeto_B)    # Nombre de la base de datos del sujetoB
 
-clasificar()
+            efectividades ={}
+            procesados = 0
+
+            for bInf in range (1,49):
+                for bSup in range (bInf,50):
+
+                    # Parametros de la clasificacion
+                    canales             = [1,2,3]               # Canales a considerar
+                    Fs                  = 250                   # Frecuencia de muestreo
+                    porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
+                    iteraciones         = 30                    # Iteraciones a realizar
+                    semillaKFold        = 1                     # Semilla para mezclar los datos 
+                    claseUtilizada      = 'C'+str(clase)        # Clase a utilizar para distinguir entre sujetos
+                    bandaInferiorFiltro = bInf                  # Banda inferior de frecuencias a filtrar
+                    bandaSuperiorFiltro = bSup                  # Banda superior de frecuencias a filtrar
+
+                    efectividades[clasificar()]={"bInf":bInf,"bSup":bSup}
+
+            print("SA:",sujeto_A,"SB:",sujeto_B,"C:",clase,"Efect:",max(efectividades),"Param:",efectividades[max(efectividades)])
