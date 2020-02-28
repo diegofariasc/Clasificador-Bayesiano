@@ -84,8 +84,6 @@ def clasificar():
                 P_SA *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
                 P_SB *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
 
-            
-
             # Ver en que sujeto la probabilidad es mas alta
             
             if P_SA > P_SB:
@@ -110,21 +108,18 @@ def clasificar():
         
            
         K_resultados.append((conteo_SA,conteo_SB,aciertos))  # Guardar la efectividad K
-        
-
     
-    
-    #print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
-    #print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
-    #print("Aciertos:                   ",[i[2] for i in K_resultados])
-    #print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
+    print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
+    print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
+    print("Aciertos:                   ",[i[2] for i in K_resultados])
+    print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
 
     efectividadesPromedio=100*mean([i[2] for i in K_resultados])/(datosTest*2)
     print("Efectividad promedio:       ",efectividadesPromedio,"%")
 
 # Parametros de los archivos
-sujetoA_nombreArchivo = "./Sujetos/S8"   # Nombre de la base de datos del sujetoA
-sujetoB_nombreArchivo = "./Sujetos/S9"    # Nombre de la base de datos del sujetoB
+sujetoA_nombreArchivo = "./Sujetos/S1"   # Nombre de la base de datos del sujetoA
+sujetoB_nombreArchivo = "./Sujetos/S3"    # Nombre de la base de datos del sujetoB
 
 # Parametros de la clasificacion
 canales             = [1,2,3]               # Canales a considerar
@@ -132,8 +127,8 @@ Fs                  = 250                   # Frecuencia de muestreo
 porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
 iteraciones         = 30                    # Iteraciones a realizar
 semillaKFold        = 1                     # Semilla para mezclar los datos 
-claseUtilizada      = 'C2'                  # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 18                    # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 22                   # Banda superior de frecuencias a filtrar
+claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
+bandaInferiorFiltro = 3                    # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 9                    # Banda superior de frecuencias a filtrar
 
 clasificar()
