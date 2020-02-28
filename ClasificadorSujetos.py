@@ -47,11 +47,11 @@ def clasificar():
     for K_experimento in range(iteraciones):
 
         # Mezclar datos 
-        seed(semillaKFold)          # Estandarizar la semilla
-        shuffle(varianzas_SA)       # Ordenar de forma aleatoria los datos del sujeto A
+        seed(semillaKFold)                              # Estandarizar la semilla
+        [shuffle(canal) for canal in varianzas_SA]      # Ordenar de forma aleatoria los datos del sujeto A
 
-        seed(semillaKFold)          # Estandarizar la semilla
-        shuffle(varianzas_SB)       # Ordenar de forma aleatoria los datos del sujeto B
+        seed(semillaKFold)                              # Estandarizar la semilla
+        [shuffle(canal) for canal in varianzas_SB]      # Ordenar de forma aleatoria los datos del sujeto B
 
         # Delimitar datos designados a entrenamiento y extraerles media y desviacion
         #  0 0 0 0 0 0 0  [1 1 1 1 1 1 1]
@@ -84,14 +84,16 @@ def clasificar():
                 P_SA *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
                 P_SB *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
 
+            
 
             # Ver en que sujeto la probabilidad es mas alta
+            
             if P_SA > P_SB:
                 conteo_SA +=1
                 aciertos+=1
             else:
                 conteo_SB +=1
-
+        
         # Clasificar experimentos que se sabia eran S2
         for exp in range(datosTest):
             P_SA = P_SB = 0.5
@@ -106,42 +108,32 @@ def clasificar():
                 conteo_SB +=1
                 aciertos+=1
         
+           
         K_resultados.append((conteo_SA,conteo_SB,aciertos))  # Guardar la efectividad K
         
 
+    
+    
     #print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
     #print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
     #print("Aciertos:                   ",[i[2] for i in K_resultados])
     #print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
 
     efectividadesPromedio=100*mean([i[2] for i in K_resultados])/(datosTest*2)
-    #print("Efectividad promedio:       ",efectividadesPromedio,"%")
-    return efectividadesPromedio
+    print("Efectividad promedio:       ",efectividadesPromedio,"%")
 
-for sujeto_A in range(1,9):
-    for sujeto_B in range(sujeto_A+1,10):
-        for clase in range(1,3):
+# Parametros de los archivos
+sujetoA_nombreArchivo = "./Sujetos/S8"   # Nombre de la base de datos del sujetoA
+sujetoB_nombreArchivo = "./Sujetos/S9"    # Nombre de la base de datos del sujetoB
 
-            # Parametros de los archivos
-            sujetoA_nombreArchivo = "./Sujetos/S"+str(sujeto_A)    # Nombre de la base de datos del sujetoA
-            sujetoB_nombreArchivo = "./Sujetos/S"+str(sujeto_B)    # Nombre de la base de datos del sujetoB
+# Parametros de la clasificacion
+canales             = [1,2,3]               # Canales a considerar
+Fs                  = 250                   # Frecuencia de muestreo
+porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
+iteraciones         = 30                    # Iteraciones a realizar
+semillaKFold        = 1                     # Semilla para mezclar los datos 
+claseUtilizada      = 'C2'                  # Clase a utilizar para distinguir entre sujetos
+bandaInferiorFiltro = 18                    # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 22                   # Banda superior de frecuencias a filtrar
 
-            efectividades ={}
-            procesados = 0
-
-            for bInf in range (1,49):
-                for bSup in range (bInf,50):
-
-                    # Parametros de la clasificacion
-                    canales             = [1,2,3]               # Canales a considerar
-                    Fs                  = 250                   # Frecuencia de muestreo
-                    porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
-                    iteraciones         = 30                    # Iteraciones a realizar
-                    semillaKFold        = 1                     # Semilla para mezclar los datos 
-                    claseUtilizada      = 'C'+str(clase)        # Clase a utilizar para distinguir entre sujetos
-                    bandaInferiorFiltro = bInf                  # Banda inferior de frecuencias a filtrar
-                    bandaSuperiorFiltro = bSup                  # Banda superior de frecuencias a filtrar
-
-                    efectividades[clasificar()]={"bInf":bInf,"bSup":bSup}
-
-            print("SA:",sujeto_A,"SB:",sujeto_B,"C:",clase,"Efect:",max(efectividades),"Param:",efectividades[max(efectividades)])
+clasificar()
