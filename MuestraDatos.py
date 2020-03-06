@@ -36,19 +36,19 @@ def mostrar():
     varianzas_SA = [[ std([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentosA) ] for canal in canales]
     varianzas_SB = [[ std([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentosB) ] for canal in canales]
 
-    desplazamiento=4
+    desplazamiento=1.5
 
     # Desviacion estandar 
     #umbralCanalesA=[(mean(canal)-desplazamiento*std(canal),mean(canal)+desplazamiento*std(canal)) for canal in varianzas_SA]
     #umbralCanalesB=[(mean(canal)-desplazamiento*std(canal),mean(canal)+desplazamiento*std(canal))for canal in varianzas_SB]
 
     # Desviacion media absolta (MAD)
-    umbralCanalesA=[(mean(canal)-desplazamiento*MAD(canal),mean(canal)+desplazamiento*MAD(canal)) for canal in varianzas_SA]
-    umbralCanalesB=[(mean(canal)-desplazamiento*MAD(canal),mean(canal)+desplazamiento*MAD(canal))for canal in varianzas_SB]
+    #umbralCanalesA=[(mean(canal)-desplazamiento*MAD(canal),mean(canal)+desplazamiento*MAD(canal)) for canal in varianzas_SA]
+    #umbralCanalesB=[(mean(canal)-desplazamiento*MAD(canal),mean(canal)+desplazamiento*MAD(canal))for canal in varianzas_SB]
 
     # Rango intercuartil
-    #umbralCanalesA=[IQR(canal) for canal in varianzas_SA]
-    #umbralCanalesB=[IQR(canal) for canal in varianzas_SB]
+    umbralCanalesA=[IQR(canal) for canal in varianzas_SA]
+    umbralCanalesB=[IQR(canal) for canal in varianzas_SB]
 
     # Filtrar los datos para remover outliers
     n_canalesA, n_canalesB = len(varianzas_SA), len(varianzas_SB)
