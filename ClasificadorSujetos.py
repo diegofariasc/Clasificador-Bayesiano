@@ -5,6 +5,7 @@ from scipy.signal import butter, lfilter, resample_poly
 from scipy.io     import loadmat
 from scipy.stats  import norm
 from random       import shuffle, seed
+from MuestraDatos import IQR, MAD, filtrar, ajustarNumeroExperimentos
 
 def clasificar():
     
@@ -32,8 +33,26 @@ def clasificar():
     # El proceso se repite para generar n_experimentos listas
     # Se repite nuevamente por cada canal en la lista dada 
     # Se concluye con una lista con shape (canales x varianzas)
-    varianzas_SA = [[ var([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
-    varianzas_SB = [[ var([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    varianzas_SA = [[ std([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    varianzas_SB = [[ std([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+
+    ################################## Codigo de remocion de outliers #################################
+    umbralCanalesA=[IQR(canal) for canal in varianzas_SA]
+    umbralCanalesB=[IQR(canal) for canal in varianzas_SB]
+    
+    n_canalesA, n_canalesB = len(varianzas_SA), len(varianzas_SB)
+    varianzas_SA_Filtradas = filtrar(n_experimentos,n_canalesA,umbralCanalesA,varianzas_SA)
+    varianzas_SB_Filtradas = filtrar(n_experimentos,n_canalesB,umbralCanalesB,varianzas_SB)
+
+    minimo_elementos = min(len(varianzas_SA_Filtradas[0]),len(varianzas_SB_Filtradas[0]))
+    ajustarNumeroExperimentos( varianzas_SA_Filtradas, minimo_elementos)
+    ajustarNumeroExperimentos( varianzas_SB_Filtradas, minimo_elementos)
+
+    varianzas_SA = varianzas_SA_Filtradas
+    varianzas_SB = varianzas_SB_Filtradas
+
+    n_experimentos = len(varianzas_SA_Filtradas[0])
+    ###################################################################################################
 
     # Obtener el punto en que se dividira (segun el porcentaje de datos para entrenar)
     punto_corte = int(n_experimentos * porcentajeEntrenar)
@@ -127,8 +146,8 @@ Fs                  = 250                   # Frecuencia de muestreo
 porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
 iteraciones         = 30                    # Iteraciones a realizar
 semillaKFold        = 1                     # Semilla para mezclar los datos 
-claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
+claseUtilizada      = 'C2'                  # Clase a utilizar para distinguir entre sujetos
 bandaInferiorFiltro = 3                    # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 9                    # Banda superior de frecuencias a filtrar
+bandaSuperiorFiltro = 8                    # Banda superior de frecuencias a filtrar
 
 clasificar()

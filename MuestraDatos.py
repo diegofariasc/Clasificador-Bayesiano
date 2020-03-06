@@ -117,14 +117,14 @@ def IQR(datos):
     IQR = Q3 - Q1
     return (Q1 - (1.5 * IQR),Q3 +(1.5 * IQR))
 
-def filtrar(n_experimentos, n_canales, umbral, datos):
+def filtrar(n_exp, n_canales, umbral, datos):
 
     # Generar lista para almacenar valores que pasen [ [], [], [] ]
     filtrado = [[] for i in range(n_canales)]
-
+    
     # Iterar sobre los experimentos
-    for exp in range(n_experimentos):
-
+    for exp in range(n_exp):
+        
         # Revisar canales
         pasa = True
         for canal in range(n_canales):
@@ -190,4 +190,7 @@ claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir e
 bandaInferiorFiltro = 3                     # Banda inferior de frecuencias a filtrar
 bandaSuperiorFiltro = 9                     # Banda superior de frecuencias a filtrar
 
-mostrar()
+def main():
+    mostrar()
+
+#main()
