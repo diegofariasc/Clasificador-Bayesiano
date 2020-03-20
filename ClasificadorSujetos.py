@@ -1,11 +1,11 @@
 # Clasificador bayesiano con 9 sujetos, mismo movimiento
 # Programa de honores UDLAP
-from numpy        import var, mean, std, shape, zeros, prod
+from numpy        import var, mean, std, median, shape, zeros, prod
 from scipy.signal import butter, lfilter, resample_poly
 from scipy.io     import loadmat
 from scipy.stats  import norm
 from random       import shuffle, seed
-from MuestraDatos import IQR, MAD, filtrar, ajustarNumeroExperimentos
+from MuestraDatos import IQR, MAD, filtrar, ajustarNumeroExperimentos, obtenerFrecuenciasCorteOptimas
 
 def clasificar():
     
@@ -37,8 +37,8 @@ def clasificar():
     varianzas_SB = [[ std([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
 
     ################################## Codigo de remocion de outliers #################################
-    umbralCanalesA=[IQR(canal) for canal in varianzas_SA]
-    umbralCanalesB=[IQR(canal) for canal in varianzas_SB]
+    umbralCanalesA=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal)) for canal in varianzas_SA]
+    umbralCanalesB=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal))for canal in varianzas_SB]
     
     n_canalesA, n_canalesB = len(varianzas_SA), len(varianzas_SB)
     varianzas_SA_Filtradas = filtrar(n_experimentos,n_canalesA,umbralCanalesA,varianzas_SA)
@@ -128,26 +128,50 @@ def clasificar():
            
         K_resultados.append((conteo_SA,conteo_SB,aciertos))  # Guardar la efectividad K
     
-    print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
-    print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
-    print("Aciertos:                   ",[i[2] for i in K_resultados])
-    print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
+    #print("Clasificados como sujeto A: ",[i[0] for i in K_resultados])
+    #print("Clasificados como sujeto B: ",[i[1] for i in K_resultados])
+    #print("Aciertos:                   ",[i[2] for i in K_resultados])
+    #print("Efectividades:              ",[str(100*i[2]/(datosTest*2))+"%" for i in K_resultados])
 
     efectividadesPromedio=100*mean([i[2] for i in K_resultados])/(datosTest*2)
     print("Efectividad promedio:       ",efectividadesPromedio,"%")
 
-# Parametros de los archivos
-sujetoA_nombreArchivo = "./Sujetos/S1"   # Nombre de la base de datos del sujetoA
-sujetoB_nombreArchivo = "./Sujetos/S3"    # Nombre de la base de datos del sujetoB
 
-# Parametros de la clasificacion
-canales             = [1,2,3]               # Canales a considerar
-Fs                  = 250                   # Frecuencia de muestreo
-porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
-iteraciones         = 30                    # Iteraciones a realizar
-semillaKFold        = 1                     # Semilla para mezclar los datos 
-claseUtilizada      = 'C2'                  # Clase a utilizar para distinguir entre sujetos
-bandaInferiorFiltro = 3                    # Banda inferior de frecuencias a filtrar
-bandaSuperiorFiltro = 8                    # Banda superior de frecuencias a filtrar
 
-clasificar()
+
+frecuenciasCorteOptimas = obtenerFrecuenciasCorteOptimas('Efectividades.xlsx','K-Fold')
+
+SujetoA = 0
+claseUtilizada = 'C2'
+
+for lineaBandas in frecuenciasCorteOptimas:
+
+    SujetoA = SujetoA+1
+    SujetoB = SujetoA
+
+    for banda in lineaBandas:
+
+        if claseUtilizada == 'C2':
+            claseUtilizada = 'C1'
+            SujetoB = SujetoB + 1
+        else:
+            claseUtilizada = 'C2'
+
+
+        # Parametros de los archivos
+        sujetoA_nombreArchivo = "./Sujetos/S"+str(SujetoA)  # Nombre de la base de datos del sujetoA
+        sujetoB_nombreArchivo = "./Sujetos/S"+str(SujetoB)  # Nombre de la base de datos del sujetoB
+
+        # Parametros de la clasificacion
+        canales             = [1,2,3]               # Canales a considerar
+        desplazamiento      = 3.5                   # Veces (MAD) distanciamiento de la mediana
+        Fs                  = 250                   # Frecuencia de muestreo
+        porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
+        iteraciones         = 30                    # Iteraciones a realizar
+        semillaKFold        = 1                     # Semilla para mezclar los datos 
+        #claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
+        bandaInferiorFiltro = banda[0]              # Banda inferior de frecuencias a filtrar
+        bandaSuperiorFiltro = banda[1]              # Banda superior de frecuencias a filtrar
+
+        print("INF: ", banda[0],"SUP: ",banda[1],claseUtilizada)
+        clasificar()
