@@ -6,6 +6,7 @@ from scipy.io     import loadmat
 from scipy.stats  import norm
 from random       import shuffle, seed
 from MuestraDatos import IQR, MAD, filtrar, ajustarNumeroExperimentos, obtenerFrecuenciasCorteOptimas
+from dimFractal   import katz, hfd
 
 def clasificar():
     
@@ -33,8 +34,8 @@ def clasificar():
     # El proceso se repite para generar n_experimentos listas
     # Se repite nuevamente por cada canal en la lista dada 
     # Se concluye con una lista con shape (canales x varianzas)
-    varianzas_SA = [[ std([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
-    varianzas_SB = [[ std([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    varianzas_SA = [[ katz([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    varianzas_SB = [[ katz([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
 
     ################################## Codigo de remocion de outliers #################################
     umbralCanalesA=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal)) for canal in varianzas_SA]
@@ -139,7 +140,7 @@ def clasificar():
 
 
 
-frecuenciasCorteOptimas = obtenerFrecuenciasCorteOptimas('Efectividades.xlsx','K-Fold')
+frecuenciasCorteOptimas = obtenerFrecuenciasCorteOptimas('Efectividades.xlsx','Validacion')
 
 SujetoA = 0
 claseUtilizada = 'C2'
