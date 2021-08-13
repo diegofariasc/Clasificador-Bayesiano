@@ -131,7 +131,7 @@ def MAD(datos):
     return median([abs(x-mediana) for x in datos])
     
 # Rango intercuartil
-def IQR(datos, desplazamiento):
+def IQR(datos, desplazamiento=1.5):
     datos = sorted(datos)
     Q1,Q3 = percentile(datos,[25,75])
     IQR = Q3 - Q1
@@ -156,6 +156,26 @@ def filtrar(n_exp, n_canales, umbral, datos):
                 filtrado[canal].append(datos[canal][exp])
 
     return filtrado
+
+
+def localizarIndicesConservar(n_exp, n_canales, umbral, datos):
+
+    # Generar lista para almacenar indices de los valores que pasen [ ]
+    indicesConservar = []
+
+    # Iterar sobre los experimentos
+    for exp in range(n_exp):
+
+        # Revisar canales
+        pasa = True
+        for canal in range(n_canales):
+            pasa = pasa and datos[canal][exp] > umbral[canal][0] and datos[canal][exp] < umbral[canal][1]
+
+        # Si pasan, agregarlos al conjunto
+        if pasa:
+            indicesConservar.append( exp )
+
+    return set ( indicesConservar )
 
 def ajustarNumeroExperimentos(datos, cantidad):
 

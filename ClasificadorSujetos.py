@@ -15,6 +15,9 @@ def clasificar():
     sujetoA = loadmat(sujetoA_nombreArchivo+".mat")[claseUtilizada]
     sujetoB = loadmat(sujetoB_nombreArchivo+".mat")[claseUtilizada]
 
+    print(shape(sujetoA))
+    print( shape(sujetoB) )
+
     # Diseño del filtro
     b,a = butter(4, [bandaInferiorFiltro/(Fs/2),bandaSuperiorFiltro/(Fs/2)], btype='bandpass')
 
@@ -30,29 +33,33 @@ def clasificar():
     n_experimentos = min(n_experimentosA, n_experimentosB)
     
     # Calcular las varianzas mediante comprension de lista 
-    # Primero se obtiene la lista de las n_muestras. Se calcula la varianza de las n_muestras
+    # Primero se obtiene la lista de las n_muestras. Se calcula la caracteristica de las n_muestras
     # El proceso se repite para generar n_experimentos listas
     # Se repite nuevamente por cada canal en la lista dada 
     # Se concluye con una lista con shape (canales x varianzas)
-    varianzas_SA = [[ katz([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
-    varianzas_SB = [[ katz([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    caracteristicas_SA = [[ katz([sujetoA[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
+    caracteristicas_SB = [[ katz([sujetoB[canal-1][j][k] for j in range(n_muestras)]) for k in range(n_experimentos) ] for canal in canales]
 
     ################################## Codigo de remocion de outliers #################################
-    umbralCanalesA=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal)) for canal in varianzas_SA]
-    umbralCanalesB=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal))for canal in varianzas_SB]
-    
-    n_canalesA, n_canalesB = len(varianzas_SA), len(varianzas_SB)
-    varianzas_SA_Filtradas = filtrar(n_experimentos,n_canalesA,umbralCanalesA,varianzas_SA)
-    varianzas_SB_Filtradas = filtrar(n_experimentos,n_canalesB,umbralCanalesB,varianzas_SB)
+    umbralCanalesA=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal)) for canal in caracteristicas_SA]
+    umbralCanalesB=[(median(canal)-desplazamiento*MAD(canal),median(canal)+desplazamiento*MAD(canal))for canal in caracteristicas_SB]
+
+    print( umbralCanalesA )
+
+    n_canalesA, n_canalesB = len(caracteristicas_SA), len(caracteristicas_SB)
+    varianzas_SA_Filtradas = filtrar(n_experimentos,n_canalesA,umbralCanalesA,caracteristicas_SA)
+    varianzas_SB_Filtradas = filtrar(n_experimentos,n_canalesB,umbralCanalesB,caracteristicas_SB)
 
     minimo_elementos = min(len(varianzas_SA_Filtradas[0]),len(varianzas_SB_Filtradas[0]))
+    print( type(varianzas_SA_Filtradas), shape(varianzas_SA_Filtradas), type(minimo_elementos) )
     ajustarNumeroExperimentos( varianzas_SA_Filtradas, minimo_elementos)
     ajustarNumeroExperimentos( varianzas_SB_Filtradas, minimo_elementos)
 
-    varianzas_SA = varianzas_SA_Filtradas
-    varianzas_SB = varianzas_SB_Filtradas
+    caracteristicas_SA = varianzas_SA_Filtradas
+    caracteristicas_SB = varianzas_SB_Filtradas
 
     n_experimentos = len(varianzas_SA_Filtradas[0])
+    print(n_experimentos)
     ###################################################################################################
 
     # Obtener el punto en que se dividira (segun el porcentaje de datos para entrenar)
@@ -60,6 +67,7 @@ def clasificar():
 
     # Datos clasificados (Calcular cuantos datos se destinan a clasificacion)
     datosTest = n_experimentos-punto_corte
+    print(datosTest)
 
     K_resultados    = []    # Guardar las efectividades de cada iteracion del K-Fold
 
@@ -68,24 +76,24 @@ def clasificar():
 
         # Mezclar datos 
         seed(semillaKFold)                              # Estandarizar la semilla
-        [shuffle(canal) for canal in varianzas_SA]      # Ordenar de forma aleatoria los datos del sujeto A
+        [shuffle(canal) for canal in caracteristicas_SA]      # Ordenar de forma aleatoria los datos del sujeto A
 
         seed(semillaKFold)                              # Estandarizar la semilla
-        [shuffle(canal) for canal in varianzas_SB]      # Ordenar de forma aleatoria los datos del sujeto B
+        [shuffle(canal) for canal in caracteristicas_SB]      # Ordenar de forma aleatoria los datos del sujeto B
 
         # Delimitar datos designados a entrenamiento y extraerles media y desviacion
         #  0 0 0 0 0 0 0  [1 1 1 1 1 1 1]
 
-        medias_SA     = [mean(canal_varianza[0:punto_corte]) for canal_varianza in varianzas_SA]   
-        medias_SB     = [mean(canal_varianza[0:punto_corte]) for canal_varianza in varianzas_SB]
-        desviacion_SA = [std (canal_varianza[0:punto_corte]) for canal_varianza in varianzas_SA]
-        desviacion_SB = [std (canal_varianza[0:punto_corte]) for canal_varianza in varianzas_SB]
+        medias_SA     = [mean(canal_varianza[0:punto_corte]) for canal_varianza in caracteristicas_SA]
+        medias_SB     = [mean(canal_varianza[0:punto_corte]) for canal_varianza in caracteristicas_SB]
+        desviacion_SA = [std (canal_varianza[0:punto_corte]) for canal_varianza in caracteristicas_SA]
+        desviacion_SB = [std (canal_varianza[0:punto_corte]) for canal_varianza in caracteristicas_SB]
 
         # Fase de clasificacion------------------------------------------------------------------------------
         # Delimitar datos de clasificacion (test)
         
-        varianzas_test_SA = [canal_varianza[punto_corte:] for canal_varianza in varianzas_SA]
-        varianzas_test_SB = [canal_varianza[punto_corte:] for canal_varianza in varianzas_SB]
+        datos_prueba_SA = [canal_varianza[punto_corte:] for canal_varianza in caracteristicas_SA]
+        datos_prueba_SB = [canal_varianza[punto_corte:] for canal_varianza in caracteristicas_SB]
 
         # Contadores de clasificados como sujeto A y B y aciertos
         conteo_SA = conteo_SB = aciertos = 0        
@@ -101,8 +109,8 @@ def clasificar():
             for canal in range(len(canales)):
 
                 # Multiplicar las probabilidades por P(x) donde x es la varianza del experimento n
-                P_SA *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
-                P_SB *= norm.pdf(varianzas_test_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
+                P_SA *= norm.pdf(datos_prueba_SA[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
+                P_SB *= norm.pdf(datos_prueba_SA[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
 
             # Ver en que sujeto la probabilidad es mas alta
             
@@ -116,8 +124,8 @@ def clasificar():
         for exp in range(datosTest):
             P_SA = P_SB = 0.5
             for canal in range(len(canales)):
-                P_SA *= norm.pdf(varianzas_test_SB[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
-                P_SB *= norm.pdf(varianzas_test_SB[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
+                P_SA *= norm.pdf(datos_prueba_SB[canal-1][exp],medias_SA[canal-1],desviacion_SA[canal-1])
+                P_SB *= norm.pdf(datos_prueba_SB[canal-1][exp],medias_SB[canal-1],desviacion_SB[canal-1])
 
             # Ver en que sujeto la probabilidad es mas alta 
             if P_SA > P_SB:
@@ -142,37 +150,19 @@ def clasificar():
 
 frecuenciasCorteOptimas = obtenerFrecuenciasCorteOptimas('Efectividades.xlsx','Validacion')
 
-SujetoA = 0
-claseUtilizada = 'C2'
+# Parametros de los archivos
+sujetoA_nombreArchivo = "./Sujetos/S"+str(1)  # Nombre de la base de datos del sujetoA
+sujetoB_nombreArchivo = "./Sujetos/S"+str(2)  # Nombre de la base de datos del sujetoB
 
-for lineaBandas in frecuenciasCorteOptimas:
+# Parametros de la clasificacion
+canales             = [1,2,3]               # Canales a considerar
+desplazamiento      = 3.5                   # Veces (MAD) distanciamiento de la mediana
+Fs                  = 250                   # Frecuencia de muestreo
+porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
+iteraciones         = 30                    # Iteraciones a realizar
+semillaKFold        = 1                     # Semilla para mezclar los datos 
+claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
+bandaInferiorFiltro = 23                    # Banda inferior de frecuencias a filtrar
+bandaSuperiorFiltro = 34                    # Banda superior de frecuencias a filtrar
 
-    SujetoA = SujetoA+1
-    SujetoB = SujetoA
-
-    for banda in lineaBandas:
-
-        if claseUtilizada == 'C2':
-            claseUtilizada = 'C1'
-            SujetoB = SujetoB + 1
-        else:
-            claseUtilizada = 'C2'
-
-
-        # Parametros de los archivos
-        sujetoA_nombreArchivo = "./Sujetos/S"+str(SujetoA)  # Nombre de la base de datos del sujetoA
-        sujetoB_nombreArchivo = "./Sujetos/S"+str(SujetoB)  # Nombre de la base de datos del sujetoB
-
-        # Parametros de la clasificacion
-        canales             = [1,2,3]               # Canales a considerar
-        desplazamiento      = 3.5                   # Veces (MAD) distanciamiento de la mediana
-        Fs                  = 250                   # Frecuencia de muestreo
-        porcentajeEntrenar  = 0.5                   # Porcentaje de los datos que se usaran para entrenar
-        iteraciones         = 30                    # Iteraciones a realizar
-        semillaKFold        = 1                     # Semilla para mezclar los datos 
-        #claseUtilizada      = 'C1'                  # Clase a utilizar para distinguir entre sujetos
-        bandaInferiorFiltro = banda[0]              # Banda inferior de frecuencias a filtrar
-        bandaSuperiorFiltro = banda[1]              # Banda superior de frecuencias a filtrar
-
-        print("INF: ", banda[0],"SUP: ",banda[1],claseUtilizada)
-        clasificar()
+clasificar()

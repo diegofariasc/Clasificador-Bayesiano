@@ -1,5 +1,5 @@
-from numpy import zeros, arange, fix, polyfit
-from math  import log, sqrt
+from numpy      import zeros, arange, fix, polyfit, array, float64, longdouble, log, sqrt
+from decimal    import Decimal, Context
 
 """
 Algoritmo de Higuchi
@@ -38,11 +38,14 @@ Basado en la implementacion de Jess Monge lvarez
 Input:  serie   Una lista de valores
 Output:         Dimension fractal que describe la lista serie
 """
-def katz(serie):
+def katz( serie ):
+
+    serie = array( serie, dtype= longdouble)
 
     N = len(serie)
-    L = sum([sqrt(1 + ((serie[i-1] - serie[i])**2)) for i in range(1,N)])
+    L = sum([sqrt(1 + ((serie[i - 1] - serie[i]) ** 2)) for i in range(1, N)])
 
-    d=max([sqrt(((0-i)**2) + ((serie[0] - serie[i])**2)) for i in range(1,N)])
+    d = max([sqrt(((0 - i) ** 2) + ((serie[0] - serie[i]) ** 2)) for i in range(1, N)])
 
-    return log(N-1) / (log (N-1) + log(d/L))
+    return log(N - 1) / (log(N - 1) + log(d / L))
+
